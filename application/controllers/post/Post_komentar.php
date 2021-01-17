@@ -48,7 +48,79 @@ class Post_komentar extends REST_Controller
     function index_post($jenis)
     {
         $arrData = $this->post();
-        print_r($arrData);
-        die;
+
+        if ($jenis == 'save') {
+            if (!$arrData['posting_komentar']) {
+                $response['status'] = 400;
+                $response['error'] = false;
+                $this->response($response, 400);
+            }
+            $return = $this->Act_post_komentar->save($arrData['posting_komentar']);
+            if ($return['status'] == 1) {
+                $response['status'] = 400;
+                $response['error'] = false;
+                $response['keterangan'] = $return['keterangan'];
+            } else {
+                $response['status'] = 200;
+                $response['error'] = true;
+                $response['keterangan'] = $return['keterangan'];
+            }
+            $this->response($response);
+        } else if ($jenis == 'delete') {
+            if (!$arrData['posting_komentar']) {
+                $response['status'] = 400;
+                $response['error'] = false;
+                $this->response($response, 400);
+            }
+            $return = $this->Act_post_komentar->delete($arrData['posting_komentar']);
+
+            if ($return['status'] == 1) {
+                $response['status'] = 400;
+                $response['error'] = false;
+                $response['keterangan'] = $return['keterangan'];
+            } else {
+                $response['status'] = 200;
+                $response['error'] = true;
+                $response['keterangan'] = $return['keterangan'];
+            }
+            $this->response($response);
+        } else if ($jenis == 'update') {
+            if (!$arrData['posting_komentar']) {
+                $response['status'] = 400;
+                $response['error'] = false;
+                $this->response($response, 400);
+            }
+            $return = $this->Act_post_komentar->update($arrData['posting_komentar']);
+
+            if ($return['status'] == 1) {
+                $response['status'] = 400;
+                $response['error'] = false;
+                $response['keterangan'] = $return['keterangan'];
+            } else {
+                $response['status'] = 200;
+                $response['error'] = true;
+                $response['keterangan'] = $return['keterangan'];
+            }
+            $this->response($response);
+        } else if ($jenis == 'select') {
+            if (!$arrData['posting_komentar']) {
+                $response['status'] = 400;
+                $response['error'] = false;
+                $this->response($response, 400);
+            }
+            $return = $this->Act_post_komentar->select($arrData['posting_komentar']);
+
+            if ($return['status'] == 1) {
+                $response['status'] = 400;
+                $response['error'] = false;
+                $response['keterangan'] = $return['keterangan'];
+            } else {
+                $response['status'] = 200;
+                $response['error'] = true;
+                $response['keterangan'] = $return['keterangan'];
+                $response['data'] = $return['data'];
+            }
+            $this->response($response);
+        }
     }
 }

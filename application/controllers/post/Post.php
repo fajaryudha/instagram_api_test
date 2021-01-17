@@ -102,7 +102,7 @@ class Post extends REST_Controller
                 $this->response($response, 400);
             }
             $return = $this->Act_post->select($arrData['posting']);
-
+            
             if ($return['status'] == 1) {
                 $response['status'] = 400;
                 $response['error'] = false;
@@ -111,6 +111,7 @@ class Post extends REST_Controller
                 $response['status'] = 200;
                 $response['error'] = true;
                 $response['keterangan'] = $return['keterangan'];
+                $response['data'] = $return['data'];
             }
             $this->response($response);
         }

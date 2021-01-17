@@ -5,31 +5,75 @@ if (!defined('BASEPATH')) {
 
 class Act_post_komentar extends CI_Model
 {
-    function cek_auth($arrData)
+    function save($arrData)
     {
-        if (empty($arrData)) {
-            $error['keterangan'] = 'Periksa Username Atau Password';
+        $arrResult = $arrData;
+        $arrResult['created'] = date("Y-m-d h:i:sa");
+        if (!$this->Main->insertUpdate('t_post_profile_komentar', $arrResult)) {
             $error['status'] = 1;
+            $error['keterangan'] = "Kesalahan Sistem";
         } else {
-            $sqlAuth = $this->db->select('*')
-                ->where('user', $arrData['user'])
-                ->get_compiled_select('auth');
-            $arrResult = $this->Main->get_rows($sqlAuth, false);
-          
-            if (empty($arrResult)) {
-                $error['keterangan'] = 'Data Tidak Di temukan';
-                $error['status'] = 1;
-            } else {
-                $arrResult['password'] = $this->azdgcrypt->decrypt($arrResult['password']);
-                if ($arrResult['password'] == $arrData['password']) {
-                    $error['keterangan'] = 'Data Berhasil Ditemkan';
-                    $error['status'] = 0;
-                } else {
-                    $error['keterangan'] = "Data Tidak sama/Password Salah";
-                    $error['status'] = 1;
-                }
-            }
+            $error['status'] = 0;
+            $error['keterangan'] = "Data Berhasil Ditambahkan";
         }
+        return $error;
+    }
+
+    function delete($arrData)
+    {
+        $arrResult = $arrData;
+        if (empty($arrResult['id_komentar'])) {
+            $error['status'] = 1;
+            $error['keterangan'] = "Kesalahan Sistem";
+            return $error;
+        }
+
+        if (!$this->db->delete('t_post_profile_komentar', array('id_komentar' => $arrResult['id_komentar']))) {
+            $error['status'] = 1;
+            $error['keterangan'] = "Kesalahan Sistem";
+        } else {
+            $error['status'] = 0;
+            $error['keterangan'] = "Data Berhasil Dihapus";
+        }
+        return $error;
+    }
+
+    function update($arrData)
+    {
+        $arrResult = $arrData;
+        if (empty($arrResult['id_post_profile'])) {
+            $error['status'] = 1;
+            $error['keterangan'] = "Kesalahan Sistem";
+            return $error;
+        }
+        if (!$this->Main->insertUpdate('t_post_profile_komentar', $arrResult, array('id_komentar' => $arrResult['id_komentar']))) {
+            $error['status'] = 1;
+            $error['keterangan'] = "Kesalahan Sistem";
+        } else {
+            $error['status'] = 0;
+            $error['keterangan'] = "Data Berhasil Ditambahkan";
+        }
+        return $error;
+        # code...
+    }
+
+    function select($arrData)
+    {
+        $arrResult = $arrData;
+        if (empty($arrResult['id_post_profile'])) {
+            $error['status'] = 1;
+            $error['keterangan'] = "Kesalahan Sistem";
+            return $error;
+        }
+        $sqlGetData = $this->db->select('*')
+            ->where('id_post_profile', $arrResult['id_post_profile'])
+            ->get_compiled_select('t_post_profile_komentar');
+        $arrReturn = $this->Main->get_rows($sqlGetData, TRUE);
+        
+        $error['status'] = 0;
+        $error['keterangan'] = "Data Ditemukan";
+        $error['data'] = $arrReturn;
+
         return $error;
     }
 }
