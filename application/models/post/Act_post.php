@@ -15,6 +15,7 @@ class Act_post extends CI_Model
         } else {
             $error['status'] = 0;
             $error['keterangan'] = "Data Berhasil Ditambahkan";
+            $error['id_post_profile'] = $this->db->insert_id();
         }
         return $error;
     }
@@ -59,12 +60,12 @@ class Act_post extends CI_Model
     function select($arrData)
     {
         $arrResult = $arrData;
+        
         if (empty($arrResult['id_profile'])) {
             $error['status'] = 1;
             $error['keterangan'] = "Kesalahan Sistem";
             return $error;
         }
-
         if ($arrResult['jenis_select'] == 'teman') {
             $sqlGetRelation = $this->db->select('*')
                 ->where('id_profile_pemilik', $arrResult['id_profile'])

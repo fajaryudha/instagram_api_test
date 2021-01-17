@@ -22,6 +22,7 @@ use Restserver\Libraries\REST_Controller;
  */
 class Post extends REST_Controller
 {
+    public $slash = DIRECTORY_SEPARATOR;
 
     function __construct()
     {
@@ -41,12 +42,26 @@ class Post extends REST_Controller
     function index_post($jenis)
     {
         $arrData = $this->post();
+
+
+        // $input = file_get_contents('php://input');
+
         if ($jenis == 'save') {
+
+            $arrData = json_decode($arrData['data'], true);
+            $arrData['upload'] = $_FILES;
+            if (!$arrData['upload']) {
+                $response['status'] = 400;
+                $response['error'] = false;
+                $response['keterangan'] = "File Kosong";
+                $this->response($response, 400);
+            }
             if (!$arrData['posting']) {
                 $response['status'] = 400;
                 $response['error'] = false;
                 $this->response($response, 400);
             }
+
             $return = $this->Act_post->save($arrData['posting']);
 
             if ($return['status'] == 1) {
@@ -54,9 +69,23 @@ class Post extends REST_Controller
                 $response['error'] = false;
                 $response['keterangan'] = $return['keterangan'];
             } else {
-                $response['status'] = 200;
-                $response['error'] = true;
-                $response['keterangan'] = $return['keterangan'];
+
+                $file = $this->upload($arrData, $return['id_post_profile']);
+
+                $arrData['posting']['id_post_profile'] = $return['id_post_profile'];
+                $arrData['posting']['foto'] = $file['file'];
+                $return = $this->Act_post->update($arrData['posting']);
+
+                if ($file['status'] == 1 || $return['status'] == 1) {
+                    $response['status'] = 400;
+                    $response['error'] = true;
+                    $response['keterangan'] = $return['keterangan'];
+                } else {
+                    $response['status'] = 200;
+                    $response['error'] = true;
+                    $response['keterangan'] = $return['keterangan'];
+                    $response['keterangan_file'] = $file['keterangan'];
+                }
             }
             $this->response($response);
         } else if ($jenis == 'delete') {
@@ -78,11 +107,24 @@ class Post extends REST_Controller
             }
             $this->response($response);
         } else if ($jenis == 'update') {
+
+            $arrData = json_decode($arrData['data'], true);
+            $arrData['upload'] = $_FILES;
+            
+            if (!$arrData['upload']) {
+                $response['status'] = 400;
+                $response['error'] = false;
+                $response['keterangan'] = "File Kosong";
+                $this->response($response, 400);
+            }
+
             if (!$arrData['posting']) {
                 $response['status'] = 400;
                 $response['error'] = false;
                 $this->response($response, 400);
             }
+            $file = $this->upload($arrData, $arrData['posting']['id_post_profile']);
+            $arrData['posting']['foto'] = $file['file'];
             $return = $this->Act_post->update($arrData['posting']);
 
             if ($return['status'] == 1) {
@@ -90,9 +132,17 @@ class Post extends REST_Controller
                 $response['error'] = false;
                 $response['keterangan'] = $return['keterangan'];
             } else {
-                $response['status'] = 200;
-                $response['error'] = true;
-                $response['keterangan'] = $return['keterangan'];
+
+                if ($file['status'] == 1) {
+                    $response['status'] = 400;
+                    $response['error'] = true;
+                    $response['keterangan'] = $return['keterangan'];
+                } else {
+                    $response['status'] = 200;
+                    $response['error'] = false;
+                    $response['keterangan'] = $return['keterangan'];
+                    $response['keterangan_file'] = $file['keterangan'];
+                }
             }
             $this->response($response);
         } else if ($jenis == 'select') {
@@ -102,7 +152,6 @@ class Post extends REST_Controller
                 $this->response($response, 400);
             }
             $return = $this->Act_post->select($arrData['posting']);
-            
             if ($return['status'] == 1) {
                 $response['status'] = 400;
                 $response['error'] = false;
@@ -115,5 +164,30 @@ class Post extends REST_Controller
             }
             $this->response($response);
         }
+    }
+
+    function upload($arrData, $id_post_profile)
+    {
+        $dirRoot = getcwd();
+        $file = $arrData['upload']['file'];
+        $type_file = pathinfo($file['name'], PATHINFO_EXTENSION);
+
+        if (strtolower($type_file) != 'jpg' && strtolower($type_file) != 'png'  && strtolower($type_file) != 'jpeg') {
+            $error['status'] = 1;
+            $error['keterangan'] = "File Tidak Cocok Sistem";
+            return $error;
+        }
+
+        $path = $dirRoot . $this->slash . "upload" . $this->slash . "post" . $this->slash . $id_post_profile . '.' . $type_file;
+
+        if (move_uploaded_file($file['tmp_name'], $path)) {
+            $error['status'] = 0;
+            $error['keterangan'] = "File Terupload";
+            $error['file'] = $path;
+        } else {
+            $error['status'] = 1;
+            $error['keterangan'] = "File Gagal Terupload";
+        }
+        return $error;
     }
 }
